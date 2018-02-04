@@ -1,2 +1,3 @@
-# Django_Blog
-Django_Blog可以部署在服务器的存放仓库
+# Django_Project
+Project1:基于Django的blog
+Project2:
