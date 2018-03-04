@@ -45,16 +45,18 @@ class UserMessage(models.Model):
     """
     user_id = models.IntegerField(default=0, verbose_name="接受用户")
     message = models.CharField(max_length=500, verbose_name="消息内容")
-    has_read =models.BooleanField(default=False, verbose_name="是否已读")
+    has_read = models.BooleanField(default=False, verbose_name="是否已读")
     add_time = models.DateTimeField(default=datetime.now, verbose_name="添加时间")
 
     class Meta:
         verbose_name = "用户消息"
         verbose_name_plural = verbose_name
 
+    def __str__(self):
+        return self.message
 
 class UserCourse(models.Model):
-    user =models.ForeignKey(UserProfile, verbose_name="用户")
+    user = models.ForeignKey(UserProfile, verbose_name="用户")
     course = models.ForeignKey(Course, verbose_name="课程")
     add_time = models.DateTimeField(default=datetime.now, verbose_name="添加时间")
 

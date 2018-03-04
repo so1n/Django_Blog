@@ -16,19 +16,26 @@ Including another URLconf
 import xadmin
 
 
+from django.views.static import serve
+from django_project.settings import MEDIA_ROOT
 from django.conf.urls import url, include
 from django.views.generic import TemplateView
-from users.views import LoginView, RegisterView, ActiveUserView, ForgetPwdView, ResetUserView, ModifyPwdView
+
+
 
 urlpatterns = [
     url(r'^admin/', xadmin.site.urls),
     url(r'^captcha/', include('captcha.urls')),
+    #配置上传文件的访问处理函数
+    url(r'^media/(?P<path>.*)$', serve, {"document_root": MEDIA_ROOT}),
+    #users.view相关url
+    url(r'', include('users.urls')),
+    #课程首页相关url
+    url(r'^org/', include('organization.urls', namespace="org")),
+    #课程相关url
+    url(r'^course/', include('courses.urls', namespace="course")),
 
-    url('^login/$', LoginView.as_view(), name="login"),
-    url('^register/$', RegisterView.as_view(), name="register"),
-    url('^active/(?P<active_code>\w+)/$', ActiveUserView.as_view(), name="user_active"),
-    url('^forget/$', ForgetPwdView.as_view(), name="forget_pwd"),
-    url('^reset/(?P<reset_code>\w+)/$', ResetUserView.as_view(), name="user_reset"),
-    url('^modify_pwd/$', ModifyPwdView.as_view(), name="modify_pwd"),
     url('^$', TemplateView.as_view(template_name="index.html"), name="index")
 ]
+
+handler404 = 'users.views.page_404'

@@ -4,7 +4,7 @@ from django.db import models
 
 
 class CityDict(models.Model):
-    name= models.CharField(max_length=20, verbose_name="城市")
+    name = models.CharField(max_length=20, verbose_name="城市")
     add_time = models.DateTimeField(default=datetime.now, verbose_name="添加时间")
 
     class Meta:
@@ -18,8 +18,14 @@ class CityDict(models.Model):
 class CourseOrg(models.Model):
     name = models.CharField(max_length=50, verbose_name="机构名称")
     desc = models.TextField(verbose_name="机构描述")
+    catgory = models.CharField(max_length=20,
+                               default="gx",
+                               choices=(("pxjg", "培训机构"), ("gr", "个人"), ("gx", "高校")),
+                               verbose_name="类别")
     click_nums = models.IntegerField(default=0, verbose_name="点击数")
     fav_nums = models.IntegerField(default=0, verbose_name="收藏数")
+    students = models.IntegerField(default=0, verbose_name="学习数")
+    course_nums = models.IntegerField(default=0, verbose_name="课程数")
     image = models.ImageField(upload_to="org/%y/%m", verbose_name="封面图", max_length=100)
     address = models.CharField(max_length=150, verbose_name="机构地址")
     city = models.ForeignKey(CityDict, verbose_name="所在城市")
@@ -28,6 +34,9 @@ class CourseOrg(models.Model):
     class Meta:
         verbose_name = "课程机构"
         verbose_name_plural = verbose_name
+
+    def get_teacher_nums(self):
+        return self.teacher_set.all().count()
 
     def __str__(self):
         return self.name
@@ -41,6 +50,8 @@ class Teacher(models.Model):
     work_position = models.CharField(max_length=50, verbose_name="公司职位")
     points = models.CharField(max_length=50,verbose_name="教学特点")
     click_nums = models.IntegerField(default=0, verbose_name="点击数")
+    image = models.ImageField(upload_to="teacher/%y/%m", verbose_name="头像", max_length=100, default='')
+    age = models.IntegerField(default=18, verbose_name="年龄")
     add_time = models.DateTimeField(default=datetime.now, verbose_name="添加时间")
 
     class Meta:
@@ -49,3 +60,6 @@ class Teacher(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_course_nums(self):
+        return self.course_set.all().count()

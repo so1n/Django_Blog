@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -7,10 +7,10 @@ from django.contrib.auth.models import AbstractUser
 class UserProfile(AbstractUser):
     nick_name = models.CharField(max_length=50, verbose_name="昵称")
     birthday = models.DateField(verbose_name="生日", null=True, blank=True)
-    gender = models.CharField(max_length=6, choices=(("male", "男"),("female", "女")), default="男", verbose_name="性别")
+    gender = models.CharField(max_length=6, choices=(("male", "男"), ("female", "女")), default="男", verbose_name="性别")
     address = models.CharField(max_length=100, verbose_name="地址", null=True, blank=True)
     mobile = models.CharField(max_length=11,null=True, blank=True, verbose_name="手机号码")
-    user_image =models.ImageField(max_length=100, upload_to="image/%y/%m", default="image/default.png", verbose_name="用户头像")
+    user_image = models.ImageField(max_length=100, upload_to="image/%Y/%m", default="image/default.png", verbose_name="用户头像")
     add_time = models.DateTimeField(default=datetime.now, verbose_name="添加时间")
 
     class Meta(AbstractUser.Meta):
@@ -20,17 +20,28 @@ class UserProfile(AbstractUser):
     def __str__(self):
         return self.username
 
+    def unread_nums(self):
+        """
+        获取用户未读消息的数量
+        :return: 
+        """
+        from operations.models import UserMessage       #防止循环引入
+
+        new_message_nums = UserMessage.objects.filter(has_read=False).count()
+
+        return new_message_nums
+
 
 class EmailVerifyRecord(models.Model):
     code = models.CharField(max_length=20, verbose_name="验证码")
     email = models.EmailField(max_length=50, verbose_name="邮箱")
-    send_type = models.CharField(choices=(("register", "注册"),("forget", "找回密码")), max_length=10, verbose_name="发送类型")
+    send_type = models.CharField(choices=(("register", "注册"), ("forget", "找回密码"), ("update_email", "修改邮箱")),
+                                 max_length=30, verbose_name="发送类型")
     send_time = models.DateTimeField(default=datetime.now, verbose_name="发送时间")
 
     class Meta:
         verbose_name = "邮箱验证码"
         verbose_name_plural = verbose_name
-
 
 
 class Banner(models.Model):
