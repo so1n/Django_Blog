@@ -1,0 +1,110 @@
+{% extends 'search/base.html' %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-智能搜索小助手</title>
+        {% block js %}
+        <script src="{% static 'uikit/js/components/grid.js' %}"></script>
+        {% endblock js %}
+    </head>
+
+    <body>
+        {% block main %}
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+        <!--主要内容块-->
+        <div class="uk-flex uk-flex-center">
+            <div class="uk-width-medium-9-10 uk-slidenav-position" data-uk-slider>
+                <h1>正在上映的热门电影</h1>
+                <hr>
+                <div class="uk-slider-container ">
+                    <ul class="uk-slider uk-grid">
+                        {% for movie in movie_list|slice:":10" %}
+                        <li class="uk-width-medium-1-5">
+                            <div style="height: 360px;width: 240px;">
+                                <figure class="uk-overlay uk-overlay-hover">
+                                    <img src="{% static 'image/movie/movie_image_' %}{{ movie.doubanid }}" width="400" height="600" alt="Image">
+                                    <figcaption class="uk-overlay-panel uk-overlay-background  uk-overlay-bottom uk-overlay-slide-bottom">
+                                        <a href="{% url 'movie:movie_info' movie.doubanid %}" style="text-decoration:none">
+                                            <span class="uk-text-large uk-text-bold">{{ forloop.counter }}:{{ movie.name }}</span>{{ movie.movie_time }}
+                                        </a>
+                                    </figcaption>
+                                </figure>
+                            </div>
+                            <div class="uk-text-center">
+                                <button class="uk-button uk-link-muted uk-container-center" >
+                                    <a href="{% url 'movie:movie_ticket' movie.doubanid %}" style="text-decoration:none">
+                                       查询票价
+                                    </a>
+                                </button>
+                            </div>
+                        </li>
+                        {% empty %}
+                        {% endfor %}
+                    </ul>
+                </div>
+                <a href="#" class="uk-slidenav uk-slidenav-previous" data-uk-slider-item="previous"></a>
+                <a href="#" class="uk-slidenav uk-slidenav-next" data-uk-slider-item="next"></a>
+            </div>
+        </div>
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+
+        <div class="uk-flex uk-flex-center">
+            <div class="uk-width-medium-9-10">
+                <h1>全部正在上映的电影</h1>
+                <hr>
+                <div class="uk-grid-width-medium-1-10 uk-margin-remove" data-uk-grid="{gutter: 20}">
+                    {% for movie in movie_list %}
+                    <div>
+                        <div class="uk-panel uk-text-center">
+                            <div class="uk-responsive-width uk-responsive-height" style="height: 180px;width: 120px;">
+                                <img src="{% static 'image/movie/movie_image_' %}{{ movie.doubanid }}" alt="Image">
+                            </div>
+                        <p data-uk-tooltip title='{{ movie.name }}'>
+                            <span class="uk-container-center">
+                                <a href="{% url 'movie:movie_info' movie.doubanid %}" style="text-decoration:none">
+                                <!--利用Django判断长度-->
+                                {% if movie.name|length > 7 %}
+                                    {{movie.name|slice:"7"}}...
+                                {%else%}
+                                    {{ movie.name }}
+                                {%endif%}
+                                </a>
+                            </span>
+                        </p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <!--空一个白行-->
+        {% endblock main %}
+        {% block footer %}
+        <div class="uk-block" ></div>
+        <!-- 大小由docs.css的tmfooter模块决定 -->
+        <div class="uk-block uk-block-secondary tm-footer">
+            <div class="uk-container-center uk-text-center">
+                <ul class="uk-subnav uk-subnav-line uk-flex-center">
+                    <li><a href="http://github.com/uikit/uikit">GitHub</a></li>
+                    <li><a href="http://github.com/uikit/uikit/issues">Issues</a></li>
+                    <li><a href="http://github.com/uikit/uikit/blob/master/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://twitter.com/getuikit">Twitter</a></li>
+                </ul>
+                <div class="uk-panel">
+                    <p>前端 Power by <a href="http://www.getuikit.net/index.html">Uikit.</a> 后端 Power by <a href="https://www.djangoproject.com/">Django</a>.</p>
+                </div>
+
+            </div>
+        </div>
+        {% endblock %}
+
+
+    </body>
+</html>

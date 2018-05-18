@@ -1,0 +1,525 @@
+{% extends 'search/base.html' %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-电影</title>
+        {% block css %}
+        <link rel="stylesheet" href="{% static 'uikit/css/components/accordion.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/sticky.css' %}">
+        {% endblock %}
+        {% block js %}
+        <script src="{% static 'uikit/js/components/accordion.js' %}"></script>
+        <script src="{% static 'uikit/js/components/sticky.js' %}"></script>
+        <!--滚动到一定高度时，显示按钮代码http://blog.csdn.net/u013372487/article/details/49785013-->
+        <script>
+        $(document).ready(function(){
+            $("#go_top").hide();
+            $(function () {
+                //检测屏幕高度
+                //这段代码检测是否超过当前屏幕一页var height=$(window).height();
+                //scroll() 方法为滚动事件
+                $(window).scroll(function(){
+                    if ($(window).scrollTop()>50){
+                        $("#go_top").fadeIn(500);
+                    }else{
+                        $("#go_top").fadeOut(500);
+                        }
+                });
+                $("#go_top").click(function(){
+                    $('body,html').animate({scrollTop:0},100);
+                    return false;
+                });
+            });
+        });
+        </script>
+        <!--固定元素相对位置的代码https://zhidao.baidu.com/question/578740886.html-->
+        <style type="text/css">
+        .top_button{position: fixed;
+           right: 20px;
+           bottom: 100px; }
+        </style>
+        {% endblock %}
+    </head>
+
+    <body>
+        {% block main %}
+        <!--主要内容块-->
+        <div class="uk-flex uk-flex-center uk-margin-large-top">
+            <div class="uk-width-medium-1-2 ">
+                <h1>{{ movie_info.name }}</h1>
+                <div class="uk-flex">
+                    <div class="uk-width-medium-1-3 uk-text-center">
+                    <img src="{% static 'image/movie/movie_image_' %}{{ movie_info.doubanid }}" width="300" height="450" alt="Image">
+                    </div>
+                    <div class="uk-width-medium-2-3 uk-clearfix uk-margin-left">
+                        <h3>故事简介</h3>
+                        <div class="uk-panel uk-margin-small-right">
+                            <p>
+                                {% if movie_info.movie_detail|length > 240 %}
+                                    {{movie_info.movie_detail|slice:"240"}}...
+                                {%else%}
+                                    {{ movie_info.movie_detail }}
+                                {%endif%}
+                            </p>
+                        </div>
+                        <br />
+                        <br />
+                        <div>
+                            <h3 class="tm-article-subtitle">查询票价</h3>
+                            <ul class="uk-subnav uk-subnav-pill" data-uk-switcher="{connect:'#subnav-pill-content-2'}">
+                                <li class="uk-active"><a href="#">城市选择</a></li>
+                                <li><a href="#">区县选择</a></li>
+                                <li><a href="#">影院选择</a></li>
+                            </ul>
+
+                            <ul id="subnav-pill-content-2" class="uk-switcher">
+                                <li class="uk-active">
+                                    <div class="uk-flex uk-flex-column">
+                                        <div class="uk-panel uk-panel-box">
+                                        {% for city in city_list %}
+                                            <a href="{% url 'movie:movie_ticket' movie_info.doubanid %}?city={{ city.id }}">{{ city.name }}</a>
+                                        {% endfor %}
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="uk-flex uk-flex-column">
+                                        <div class="uk-panel uk-panel-box">
+                                            {% for qx in qx_list %}
+                                                <a href="{% url 'movie:movie_ticket' movie_info.doubanid %}?city={{ city_id }}&qx={{ qx.id }}">{{ qx.name }}</a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </li>
+                                <li>
+                                    <div class="uk-flex uk-flex-column">
+                                        <div class="uk-panel uk-panel-box">
+                                            {% for cinema in cinema_list %}
+                                                <a href="{% url 'movie:movie_ticket' movie_info.doubanid %}?city={{ city_id }}&qx={{ qx_id }}&cinema={{ cinema.id }}">{{ cinema.name }}</a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+
+
+                    </div>
+                </div>
+                <div class="uk-flex uk-margin-large-top">
+                    <p>
+                        <font size="6px;">{{ movie_info.name }}的票价</font>
+                        <span class="uk-text-muted uk-margin-small-left">大约价格</span>
+                    </p>
+                </div>
+                <div>
+                    <ul class="uk-subnav uk-subnav-pill" data-uk-switcher="{connect:'#subnav-pill-content-1'}">
+                        <li class="uk-active"><a href="#">今天</a></li>
+                    </ul>
+                    <ul id="subnav-pill-content-1" class="uk-switcher">
+                        <li class="uk-active">
+                            <div class="uk-accordion" data-uk-accordion="{collapse: false}">
+                                <h3 class="uk-accordion-title">淘票票</h3>
+                                <div class="uk-accordion-content">
+                                    <div class="uk-overflow-container">
+                                        <table class="uk-table uk-table-hover uk-table-striped uk-table-condensed">
+                                            <thead>
+                                                <tr>
+                                                    <th>时间</th>
+                                                    <th>预计散场时间</th>
+                                                    <th>语言版本</th>
+                                                    <th>放映厅</th>
+                                                    <th>现价/影院价（元）</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for tpp in tpp_list %}
+                                                <tr>
+                                                    <td>{{ tpp.ticket_s_time }}</td>
+                                                    <td>{{ tpp.ticket_e_time }}</td>
+                                                    <td>{{ tpp.ticket_lg }}</td>
+                                                    <td>{{ tpp.ticket_tn }}</td>
+                                                    <td>
+                                                        <span class="uk-text-large uk-text-bold uk-text-danger">{{ tpp.ticket_np }}</span>
+                                                        /
+                                                        <span class="uk-text-muted">{{ tpp.ticket_op }}</span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+                                <h3 class="uk-accordion-title">时光网</h3>
+                                <div class="uk-accordion-content">
+                                    <div class="uk-overflow-container">
+                                        <table class="uk-table uk-table-hover uk-table-striped uk-table-condensed">
+                                            <thead>
+                                                <tr>
+                                                    <th>时间</th>
+                                                    <th>预计散场时间</th>
+                                                    <th>语言版本</th>
+                                                    <th>放映厅</th>
+                                                    <th>现价/影院价（元）</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for tpp in time_list %}
+                                                <tr>
+                                                    <td>{{ tpp.ticket_s_time }}</td>
+                                                    <td>{{ tpp.ticket_e_time }}</td>
+                                                    <td>{{ tpp.ticket_lg }}</td>
+                                                    <td>{{ tpp.ticket_tn }}</td>
+                                                    <td>
+                                                        <span class="uk-text-large uk-text-bold uk-text-danger">{{ tpp.ticket_np }}</span>
+                                                        /
+                                                        <span class="uk-text-muted">{{ tpp.ticket_op }}</span>
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </li>
+                        <li>Hello again!</li>
+                        <li>Bazinga!</li>
+                    </ul>
+                </div>
+                <div class="uk-margin-top"></div>
+            </div>
+            <div class="uk-width-medium-1-5 ">
+                <div class="uk-panel uk-margin-left" data-uk-sticky="{top:120}">
+                    <h2 class="uk-text-primary uk-text-bold">热门上映电影</h2>
+                    <hr class="uk-margin-top-remove">
+                    <div class="uk-flex tm-myslider">
+                        <div class="uk-flex">
+                            <ul class="uk-list uk-list-space">
+                                {% for movie in all_movie_list %}
+                                <li><a href="{% url 'movie:movie_info' movie.doubanid %}" class="uk-text-left">{{ movie.name }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--一个返回到最上面的按钮-->
+        <div class="top_button" id="go_top">
+            <div class="uk-panel uk-panel-box uk-my-border-rounded">
+            <a href="#head" data-uk-smooth-scroll><i class="uk-icon-chevron-up uk-icon-medium uk-icon-hover"></i></a>
+            </div>
+        </div>
+        {% endblock %}
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+        {% block footer %}
+        <!-- 大小由docs.css的tmfooter模块决定 -->
+        <div class="uk-block uk-block-secondary tm-footer uk-margin-top">
+            <div class="uk-container-center uk-text-center">
+                <ul class="uk-subnav uk-subnav-line uk-flex-center">
+                    <li><a href="http://github.com/uikit/uikit">GitHub</a></li>
+                    <li><a href="http://github.com/uikit/uikit/issues">Issues</a></li>
+                    <li><a href="http://github.com/uikit/uikit/blob/master/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://twitter.com/getuikit">Twitter</a></li>
+                </ul>
+                <div class="uk-panel">
+                    <p>前端 Power by <a href="http://www.getuikit.net/index.html">Uikit.</a> 后端 Power by <a href="https://www.djangoproject.com/">Django</a>.</p>
+                </div>
+
+            </div>
+        </div>
+        {% endblock %}
+        {% block js2 %}
+            <script type="text/javascript">
+            var arr1="{{ movie_info.movie_info }}";
+            var arr2="{{ movie_info.movie_info1 }}";
+            abc = arr1.replace(/\|/g, '<br />')
+            console.log(abc)
+            document.getElementById('info').innerHTML = arr1.replace(/\|/g, '<br />')
+            document.getElementById('info1').innerHTML = arr2.replace(/\|/g, '<br />')
+            </script>
+        {% endblock %}
+    </body>
+</html>
+
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-智能搜索小助手</title>
+        <link id="data-uikit-theme" rel="stylesheet" href="{% static 'uikit/css/uikit.docs.min.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/docs.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/highlight.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/slider.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/progress.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/slideshow.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/accordion.css' %}">
+        <script src="{% static 'uikit/js/jquery.js' %}"></script>
+        <script src="{% static 'uikit/js/uikit.min.js' %}"></script>
+        <script src="{% static 'uikit/js/highlight.js' %}"></script>
+        <script src="{% static 'uikit/js/docs.js' %}"></script>
+        <script src="{% static 'uikit/js/components/slider.js' %}"></script>
+        <script src="{% static 'uikit/js/components/slideshow.js' %}"></script>
+        <script src="{% static 'uikit/js/components/accordion.js' %}"></script>
+<style type="text/css">
+.pos_abs
+{
+position:fixed;
+width: 100%;
+bottom: 0px
+}
+.my_bottom{position: fixed;
+    bottom: 0px; 
+    width: 100%;}
+
+</style>
+    </head>
+
+    <body>
+        <!-- 顶栏 -->
+        <nav class="tm-navbar uk-navbar uk-navbar-attached">
+            <ul class="uk-navbar-nav">
+                <li><a href="" data-uk-offcanvas="{target:'#my-id'}"><i class="uk-icon-bars"></i></a></li>
+            </ul>
+            <div class="uk-navbar-flip">
+                <div class="uk-navbar-content">
+                    <form class="uk-search" data-uk-search="{flipDropdown:true, source:'../tests/components/_searchautocomplete.json'}">
+                        <input class="uk-search-field" type="search" placeholder="search...">
+                    </form>
+                </div>
+            </div>
+        </nav>
+         <!-- 抽屉式边栏 -->
+        <div id="my-id" class="uk-offcanvas">
+            <div class="uk-offcanvas-bar">
+                <ul class="uk-nav uk-nav-offcanvas uk-nav-parent-icon" data-uk-nav>
+                    <li class="uk-text-large uk-text-bold"><a href=""><i class="uk-icon-home uk-icon-small"></i> 首页</a></li>
+                    <li class="uk-nav-divider"></li>
+                    <li class="uk-nav-header uk-text-large">功能</li>
+                    <li class="uk-active"><a href=""><i class="uk-icon-paper-plane"></i> Home</a></li>
+                    <li><a href=""><i class="uk-icon-music"></i> 音乐</a></li>
+                    <li><a href=""><i class="uk-icon-book"></i> 书籍</a></li>
+                    <li><a href=""><i class="uk-icon-film"></i> 电影</a></li>
+                    <li><a href=""><i class="uk-icon-cloud"></i> 天气</a></li>
+                    <li><a href=""><i class="uk-icon-building"></i> 住房</a></li>
+                    <li><a href=""><i class="uk-icon-ticket"></i> 查票</a></li>
+                    <li><a href=""><i class="uk-icon-hotel"></i> 酒店</a></li>
+                    <li><a href=""><i class="uk-icon-money"></i> 工作</a></li>
+                    <li class="uk-nav-divider"></li>
+                    <li class="uk-nav-header uk-text-large">Header</li>
+                    <li class="uk-parent"><a href="#"><i class="uk-icon-star"></i> 收藏</a>
+                        <ul class="uk-nav-sub">
+                           <li><a href=""><i class="uk-icon-music"></i> 音乐</a></li>
+                           <li><a href=""><i class="uk-icon-book"></i> 书籍</a></li>
+                           <li><a href=""><i class="uk-icon-film"></i> 电影</a></li>
+                           <li><a href=""><i class="uk-icon-cloud"></i> 天气</a></li>
+                           <li><a href=""><i class="uk-icon-building"></i> 住房</a></li>
+                           <li><a href=""><i class="uk-icon-ticket"></i> 查票</a></li>
+                           <li><a href=""><i class="uk-icon-hotel"></i> 酒店</a></li>
+                           <li><a href=""><i class="uk-icon-money"></i> 工作</a></li>
+                        </ul>
+                    </li>
+                    <li><a href=""><i class="uk-icon-info-circle"></i> 关于</a></li>
+                </ul>
+            </div>
+        </div>
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+        <!--主要内容块-->
+        <div class="uk-flex uk-flex-center">
+            <div class="uk-width-medium-1-2 uk-margin-right">
+                <h1>这个杀手不太冷 Léon (1994)</h1>
+                <div class="uk-flex">
+                    <div class="uk-width-medium-1-3 ">
+                    <img src="images/p2494093630.webp" width="300" height="450" alt="Image">
+                    </div>
+                    <div class="uk-width-medium-2-3 uk-clearfix">
+                        <div class="uk-panel">
+                            <div class="uk-flex">
+                                <div class="uk-panel uk-width-medium-1-2 uk-margin-right">
+                                <h3>影人</h3>
+<p>导演: 吕克·贝松<br />
+编剧: 吕克·贝松<br />
+主演: 让·雷诺 / 娜塔莉·波特曼 / 加里·奥德曼 / 丹尼·爱罗 / 彼得·阿佩尔 / 迈克尔·巴达鲁科 / 艾伦·格里尼 / 伊丽莎白·瑞根 / 卡尔·马图斯维奇 / 弗兰克·赛格 / 麦温 / 乔治·马丁 / 罗伯特·拉萨多 / 亚当·布斯奇 / 马里奥·托迪斯科 / 萨米·纳塞利
+</p>
+                                </div>
+                                <div class="uk-panel uk-width-medium-1-2 uk-margin-right">
+                                <h3>电影类型</h3>
+<p>类型: 剧情 / 动作 / 犯罪<br />
+制片国家/地区: 法国<br />
+语言: 英语 / 意大利语 / 法语<br />
+上映日期: 1994-09-14(法国)<br />
+片长: 110分钟(剧场版) / 133分钟(国际版)<br />
+又名: 杀手莱昂 / 终极追杀令(台) / 杀手里昂 / Leon / Leon: The Professional
+</p>
+                                </div>
+                            </div>
+                        </div>
+                        <h3>故事简介</h3>
+                        <div class="uk-panel uk-margin-right">
+<p>里昂（让·雷诺饰）是名孤独的职业杀手，受人雇佣。一天，邻居家小姑娘马蒂尔达（纳塔丽·波特曼饰)敲开他的房门，要求在他那里暂避杀身之祸。原来邻居家的主人是警方缉毒组的眼线，只因贪污了一小包毒品而遭恶警（加里·奥德曼饰）杀害全家的惩罚。马蒂尔达得到里昂的留救，幸免于难，并留在里昂那里。里昂教小女孩使枪，她教里昂法文，两人关系日趋亲密，相处融洽。 
+　　女孩想着去报仇，反倒被抓，里昂及时赶到，将女孩救回。混杂着哀怨情仇的正邪之战渐次升级，更大的冲突在所难免……
+</p>
+                        </div>
+                        <br />
+                        <a href="" class="uk-float-right" data-uk-modal="{target:'#modal'}">查看评论</a>
+                    </div>
+                </div>
+                <hr class="uk-article-divider">
+                <div>
+                    <ul class="uk-subnav uk-subnav-pill" data-uk-switcher="{connect:'#subnav-pill-content-1'}">
+                        <li class="uk-active"><a href="#">今天</a></li>
+                        <li><a href="#">明天</a></li>
+                        <li><a href="#">后天</a></li>
+                    </ul>
+                    <ul id="subnav-pill-content-1" class="uk-switcher">
+                        <li class="uk-active">
+                            <div class="uk-accordion" data-uk-accordion="{collapse: false}">
+                                <h3 class="uk-accordion-title">Heading 1</h3>
+                                <div class="uk-accordion-content">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                                </div>
+
+                                <h3 class="uk-accordion-title">Heading 2</h3>
+                                <div class="uk-accordion-content">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                                </div>
+
+                                <h3 class="uk-accordion-title">Heading 3</h3>
+                                <div class="uk-accordion-content">
+                                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li>Hello again!</li>
+                        <li>Bazinga!</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="uk-width-medium-1-5 ">
+                <h3 class="tm-article-subtitle">按县/区查找影城</h3>
+                <div class="uk-flex uk-flex-column">
+                    <div class="uk-panel uk-panel-box">
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                        <a href="#">区域选择</a>
+                    </div>
+                    <div class="uk-flex uk-margin-top tm-myslider">
+                        <ul class="uk-list uk-list-space">
+                            <li><a href="#" class="uk-text-left">影院1</a></li>
+                            <li><a href="#" class="uk-text-left">影院2</a></li>
+                            <li><a href="#" class="uk-text-left">影院3</a></li>
+                            <li><a href="#" class="uk-text-left">影院4</a></li>
+                            <li><a href="#" class="uk-text-left">影院5</a></li>
+                            <li><a href="#" class="uk-text-left">影院6</a></li>
+                            <li><a href="#" class="uk-text-left">影院7</a></li>
+                            <li><a href="#" class="uk-text-left">影院8</a></li>
+                            <li><a href="#" class="uk-text-left">影院9</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <hr class="uk-article-divider">
+                <h3 class="tm-article-subtitle">热门上映电影</h3>
+                <div class="uk-flex tm-myslider">
+                    <div class="uk-flex">
+                        <ul class="uk-list uk-list-space">
+                            <li><a href="#" class="uk-text-left">热门电影1</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影2</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影3</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影4</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影5</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影6</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影7</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影8</a></li>
+                            <li><a href="#" class="uk-text-left">热门电影9</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal" class="uk-modal">
+            <div class="uk-modal-dialog uk-modal-dialog-large">
+                <button type="button" class="uk-modal-close uk-close"></button>
+                <div class="uk-modal-header">
+                    <h2>评论(20条)</h2>
+                </div>
+                <div class="uk-overflow-container">
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                <p>用户名</p>
+                <p>评论内容</p>
+                <hr>
+                </div>
+                <div class="uk-modal-footer uk-text-right">
+                    <button type="button" class="uk-button uk-button-primary"><a  href="https://movie.douban.com/subject/{{movie_id}}/comments?sort=new_score&status=P" style="text-decoration:none;color:#FFF;">跳转到豆瓣查看更多影评</a></button>
+                </div>
+            </div>
+        </div>
+
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+        <!-- 大小由docs.css的tmfooter模块决定 -->
+        <div class="uk-block uk-block-secondary tm-footer pos_abs">
+            <div class="uk-container-center uk-text-center">
+                <ul class="uk-subnav uk-subnav-line uk-flex-center">
+                    <li><a href="http://github.com/uikit/uikit">GitHub</a></li>
+                    <li><a href="http://github.com/uikit/uikit/issues">Issues</a></li>
+                    <li><a href="http://github.com/uikit/uikit/blob/master/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://twitter.com/getuikit">Twitter</a></li>
+                </ul>
+                <div class="uk-panel">
+                    <p>前端 Power by <a href="http://www.getuikit.net/index.html">Uikit.</a> 后端 Power by <a href="https://www.djangoproject.com/">Django</a>.</p>
+                </div>
+
+            </div>
+        </div>
+
+
+    </body>
+</html>

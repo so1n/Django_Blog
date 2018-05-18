@@ -1,0 +1,558 @@
+{% extends 'search/base.html' %}
+{% load staticfiles %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'uikit/css/components/notify.css' %}">
+{% endblock %}
+{% block js %}
+    <script src="{% static 'uikit/js/components/notify.js' %}"></script>
+    <!--高德地图所需文件-->
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/main1119.css" />
+    <link rel="stylesheet" href="http://cache.amap.com/lbs/static/jquery.range.css" />
+    <script src="http://cache.amap.com/lbs/static/es5.min.js"></script>
+    <script src="http://cache.amap.com/lbs/static/jquery-1.9.1.js"></script>
+    <script src="http://webapi.amap.com/maps?v=1.3&key=301a0e0e71c4edb35ce86172b94fb29a&plugin=AMap.ArrivalRange,AMap.Scale,AMap.Geocoder,AMap.Transfer,AMap.Autocomplete"></script>
+    <script src="http://cache.amap.com/lbs/static/jquery.range.js"></script>
+    <script type="text/javascript" src="http://cache.amap.com/lbs/static/addToolbar.js"></script>
+    <script type="text/javascript">
+
+        //200毫秒后自动点击绑定id的按钮
+        setTimeout(function() {
+            // IE
+            if(document.all) {
+                document.getElementById("search_button").click();
+            }
+            // 其它浏览器
+            else {
+                var e = document.createEvent("MouseEvents");
+                e.initEvent("click", true, true);
+                document.getElementById("search_button").dispatchEvent(e);
+            }
+        }, 200        );
+
+
+        function Show_Hidden(trid){
+            if(trid.style.display=="block"){
+                trid.style.display='none';
+            }else{
+                trid.style.display='block';
+            }
+            if(tr2.style.display=="block"){
+                tr2.style.display='none';
+            }else{
+                tr2.style.display='block';
+            }
+        }
+    </script>
+    <style>  
+    #transfer_panel {
+        position: absolute;
+        background-color: white;
+        max-height: 80%;
+        overflow-y: auto;
+        top: 30px;
+        left: 50px;
+        width: 250px;
+    }
+
+    .from {
+        position: absolute;
+        background-color: rgba(255,255,255,0.9);
+        max-height: 80%;
+        overflow-y: auto;
+        bottom: 30px;
+        right: 30px;
+    }
+    </style>
+{% endblock %}
+</head>
+{% block nav %}
+{% endblock %}
+{% block main %}
+<body onload="geocoder()">
+         <!-- 抽屉式边栏 -->
+
+    <!--高德地图-->
+    <div id="container"></div>
+    <!--左下角功能单-->
+    <div id="transfer_panel" style="display: block;"></div>
+        <div class="uk-flex from uk-text-large uk-border-rounded" id="tr2" style="display:block; padding: 5px;">
+            <div style=" padding: 5px;">
+                <a href="" id="fav" class="uk-link-muted" data-uk-tooltip title="收藏" data-favid="">
+                    <i class="uk-icon-map-pin uk-icon-small"></i>
+                </a>
+            </div>
+            <hr class="uk-margin-remove">
+            <div style=" padding: 5px;">
+                <a href="" id="tuijian" class="uk-link-muted" data-uk-tooltip title="推荐">
+                    <i class="uk-icon-location-arrow uk-icon-small"></i>
+                </a>
+            </div>
+            <hr class="uk-margin-remove">
+            <div style=" padding: 5px;">
+                <a href="" class="uk-link-muted" data-uk-tooltip title="打开侧边栏" data-uk-offcanvas="{target:'#my-id'}">
+                    <i class="uk-icon-bars uk-icon-small"></i>
+                </a> 
+            </div>  
+            <hr class="uk-margin-remove">
+            <div style=" padding: 5px;">
+                <a href="#" class="uk-link-muted" data-uk-tooltip title="打开菜单栏" style="text-decoration:none" onclick="Show_Hidden(tr1)">
+                    <i class="uk-icon-caret-square-o-up uk-icon-small"></i>
+                </a>
+            </div>
+        </div>
+        <div class="uk-panel uk-panel-box from uk-margin-bottom-remove" id="tr1" style="display:none;paddingpx;">
+            <form class="uk-form uk-width-medium-1-3" style="width: 250px;" >
+                <fieldset>
+                    <legend>
+                    <span>菜单</span>            
+                        <div class="uk-float-right" >
+                            <a href="" class="uk-link-muted" data-uk-offcanvas="{target:'#my-id'}">
+                                <i class="uk-icon-bars uk-icon-small"></i>
+                            </a>
+                        </div>
+                    </legend>
+                    <div class="uk-flex uk-form-row">
+                        <span class="uk-margin-small-top">选择工作地点&nbsp;&nbsp;</span>
+                        <input id="work-location" type="text" onClick="work_input(this)" value="填写工作地点" style="width: 150px;">
+                    </div>
+                </fieldset>
+            </form>
+            <div class="uk-margin-bottom">
+                <span>城市选择:</span>
+                <a href="{% url 'house:map' %}?city=gz" class="uk-link-muted">广州</a>
+                <a href="{% url 'house:map' %}?city=sz" class="uk-link-muted">深圳</a>
+            </div>
+            <form class="uk-form uk-width-medium-1-3" style="width: 250px;" id="search_map">
+                <fieldset>
+                    <legend>
+                    <span>范围选取</span>            
+                    </legend>
+                    <div class="uk-flex uk-form-row">
+                        <span class="uk-margin-small-top">房源&nbsp;&nbsp;</span>
+                        <select id="house_type" style="width: 150px;">
+                            <option value="1">58同城</option>
+                            <option value="2">安居客</option>
+                            <option value="3">房天下</option>
+                        </select>
+                    </div>
+                    <div class="uk-flex uk-form-row">
+                        <span class="uk-margin-small-top">房价&nbsp;&nbsp;</span>
+                        <select id="price" style="width: 150px;">
+                            <option value="0_2000">0-2000</option>
+                            <option value="2000_4000">2000-4000</option>
+                            <option value="4000_6000">4000-6000</option>
+                            <option value="6000_8000">6000-8000</option>
+                            <option value="8000_10000">8000-10000</option>
+                            <option value="10000_12000">10000-12000</option>
+                            <option value="12000_14000">12000-14000</option>
+                            <option value="14000_16000">14000-16000</option>
+                            <option value="16000_18000">16000-18000</option>
+                            <option value="18000_20000">18000-20000</option>
+                            <option value="20000_22000">20000-22000</option>
+                            <option value="22000_24000">22000-24000</option>
+                            <option value="24000_26000">24000-26000</option>
+                            <option value="26000_28000">26000-28000</option>
+                            <option value="28000_30000">28000-30000</option>
+                            <option value="30000_99999">30000以上</option>
+                        </select>
+                    </div>
+                    <div class="uk-form-row uk-margin-top">
+                        <button class="uk-button" id="search_button">查询</button>
+                        <a href="#" class="uk-link-muted uk-float-right uk-margin-small-top" onclick="Show_Hidden(tr1)">
+                            <i class="uk-icon-caret-square-o-down uk-icon-medium"></i>
+                        </a>  
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+        <!--加载数据时的遮罩，因为加载时很多地方点了后会没信息显示出来或者数据出错-->
+        <div id="cover" class="uk-panel uk-panel-box uk-cover-object uk-text-center uk-border-rounded" style="background-color: rgba(0,0,0,0.4);display:none;">
+            <div class="uk-container-center uk-panel uk-panel-box" style="width: 10%; min-height: 10%; top: 350px;">
+                <p id="cover1">如果没加载，请刷新</p>
+                <i class="uk-icon-spinner uk-icon-spin uk-icon-large"></i>
+                <p id="randomp">如果加载不成功请刷新</p>
+            </div>
+        </div>
+    {% endblock %}
+    {% block footer %}
+    {% endblock %}
+    {% block js2 %}
+    <script>
+    /*定义地图第一次加载的城市*/
+    var map = new AMap.Map("container", {
+        resizeEnable: true,
+        zoomEnable: true,
+        center: {{ location|safe }},
+        zoom: 11
+    });
+    var scale = new AMap.Scale();
+    map.addControl(scale);
+
+    var arrivalRange = new AMap.ArrivalRange();
+    /*x,y为工作地点坐标，x1,y1为房子坐标*/
+    var x, y, t, x1, y1, vehicle = "SUBWAY,BUS";
+    var workAddress, workMarker;
+    var rentMarkerArray = [];
+    var polygonArray = [];
+    var amapTransfer; 
+    var house_i;
+    var infoWindow = new AMap.InfoWindow({
+        offset: new AMap.Pixel(0, -30)
+    });
+   
+    /*随机显示函数*/
+    function randomp(){
+    tips = new Array(4);
+    tips[0] ="如果加载不成功请刷新";
+    tips[1] ="工作地点可以手动选择或者输入获取";
+    tips[2] ="58同城的房源有少部分几率出现定位错误";
+    tips[3] ="到达圈仅供参考";
+    index = Math.floor(Math.random() * tips.length);
+    document.getElementById('randomp').innerHTML = "Tip:"+tips[index];
+    }    
+
+    /*显示加载量的框*/
+    var box=document.getElementById("cover");
+    /*读取填写的地址*/
+    var auto = new AMap.Autocomplete({
+        input: "work-location"
+    });
+    /*获取点击的数值*/
+    map.on( 'click', getLnglat);
+    /*解析点击的数值*/
+    function getLnglat(e) {
+        x = e.lnglat.getLng();
+        y = e.lnglat.getLat();
+        addCenterMarker(e.lnglat.getLng(),e.lnglat.getLat());
+        addPolygon();
+    }
+    /*把点定位上地图*/
+    function addCenterMarker(x,y){
+        if(centerMarker){
+            centerMarker.setMap(null);
+        }
+        centerMarker= new AMap.Marker({
+            map: map,
+            icon: 'http://webapi.amap.com/theme/v1.3/markers/n/mark_r.png',
+            position: [x,y]
+        });
+    }
+    /*emmmmmmmmm.......反正就是有用*/
+    var arrivalRange = new AMap.ArrivalRange(), x, y, t, v,centerMarker,polygonArray=[];
+    //添加多边形覆盖物
+    function addPolygon() {
+        t="60";
+        v="SUBWAY,BUS";
+        arrivalRange.search([x,y],t, function(status,result){
+            delPolygon();
+            if(result.bounds){
+                for(var i=0;i<result.bounds.length;i++){
+                   var polygon = new AMap.Polygon({
+                        map:map,
+                        fillColor:"#3366FF",
+                        fillOpacity:"0.4",
+                        strokeColor:"#3366FF",
+                        strokeOpacity:"0.5",
+                        strokeWeight:1
+                    });
+                    polygon.setPath(result.bounds[i]);
+                    polygonArray.push(polygon);
+                }
+            }
+        },{
+            policy:v
+        });
+    }
+    /*移除描绘的点*/
+    function delPolygon(){
+        map.remove(polygonArray);
+        polygonArray=[];
+    }
+
+    window.setInterval(function(){//防止在移动滑动条时频繁触发请
+            if(isChanged){
+               addPolygon();
+               isChanged=false;
+           }
+    },1000)
+    
+    /*左上角控件*/
+    map.plugin(["AMap.ToolBar"], function() {
+        map.addControl(new AMap.ToolBar());
+    });
+
+    /*清空文本框的文本*/
+    function work_input(id){
+         id.value=""
+    }
+
+    $('#tuijian').on('click', function(){
+            var city_num = {{ city_num }};
+            /*house_i为计时器，每次输入时计时器归零，之后开始计时数据长度，如果长度为0则表明没有数据载入。之后导入高德api的函数每次遍历就减1，计算完成时证明加载完成。如果为0时，forEach没遍历出来,之后也就不会进行遍历了*/
+            randomp();
+            box.style.display="block";
+            document.getElementById('cover').className='uk-panel uk-panel-box uk-cover-object uk-text-center uk-border-rounded';
+
+            house_i = 0;
+            delRentLocation();
+            var rent_locations = new Set();
+            $.ajax({
+                type:"GET",
+                data:"{city_num: city_num}",
+                url: "{% url 'house:map_json_user' %}", //后台处理函数的url 这里用的是static url 需要与urls.py中的name一致
+                cache: false,
+                dataType: "json",
+                success: function(result){
+                    console.log(result)
+                    $.each(result, function(i){
+                        ret = result
+                        house_i= house_i + 1;
+                        rent_locations.add([ret[i].address, ret[i].info_title, ret[i].price, ret[i].house_url, ret[i].room_info, ret[i].house_image, ret[i].id]);
+                    });
+                if(house_i==0){
+                    box.style.display="none";
+                    UIkit.notify({
+                        message : '没有数据，重新选择',
+                        status  : 'danger',
+                        timeout : 5000,
+                        pos     : 'top-right'
+                    });
+                }
+                rent_locations.forEach(function(element,index) {
+                    addMarkerByAddress(element);
+                });
+                },
+                error: function(){
+                    alert("false");
+                }
+            });
+            return false;
+        });
+
+
+
+    $('#search_map').submit(function(){  
+            var house_type = $("#house_type").val();    //同上  
+            var price = $("#price").val(); 
+            var city_num = {{ city_num }};
+            /*house_i为计时器，每次输入时计时器归零，之后开始计时数据长度，如果长度为0则表明没有数据载入。之后导入高德api的函数每次遍历就减1，计算完成时证明加载完成。如果为0时，forEach没遍历出来,之后也就不会进行遍历了*/
+            randomp();
+            box.style.display="block";
+            document.getElementById('cover').className='uk-panel uk-panel-box uk-cover-object uk-text-center uk-border-rounded';
+
+            house_i = 0;
+            delRentLocation();
+            var rent_locations = new Set();
+            $.ajax({  
+                type:"GET",
+                data: {house_type:house_type, price:price, city_num: city_num},
+                url: "{% url 'house:map_json' %}", //后台处理函数的url 这里用的是static url 需要与urls.py中的name一致
+                cache: false,  
+                dataType: "json",  
+                success: function(result){
+                    console.log(result)
+                    $.each(result, function(i){
+                        ret = result
+                        house_i= house_i + 1;
+                        rent_locations.add([ret[i].address, ret[i].info_title, ret[i].price, ret[i].house_url, ret[i].room_info, ret[i].house_image, ret[i].id]);
+                    });
+                if(house_i==0){
+                    box.style.display="none";
+                    UIkit.notify({
+                        message : '没有数据，重新选择',
+                        status  : 'danger',
+                        timeout : 5000,
+                        pos     : 'top-right'
+                    });
+                }
+                rent_locations.forEach(function(element,index) {
+                    addMarkerByAddress(element);
+                });
+                },  
+                error: function(){  
+                    alert("false");  
+                }  
+            });  
+            return false;  
+        });  
+    /*加载符合当前城市的房源地点，并进行显示*/
+    function addMarkerByAddress(house_for) {
+        var geocoder = new AMap.Geocoder({
+            city:{{ city_code|safe }},
+            radius: 1000
+        });
+        geocoder.getLocation(house_for[0], function(status, result) {
+            /*加载出地址，然后转为经纬度再进行描点*/
+            house_i=house_i-1;
+            console.log(house_i)
+            document.getElementById('cover1').innerHTML = "正在拼命加载中，剩余数据量：" +house_i;
+            /*高德地图有时总加载少一个所以house_i取等于1可以跳过*/
+            if(house_i==1){
+                /*添加退出动画*/
+                document.getElementById('cover').className='uk-panel uk-panel-box uk-cover-object uk-text-center uk-border-rounded uk-animation-fade uk-animation-reverse';
+                /*延迟执行*/
+                setTimeout(function () {
+                    box.style.display="none";
+                }, 500);
+
+                /*uikit自带的通知*/
+                UIkit.notify({
+                    message : '加载完毕',
+                    status  : 'success',
+                    timeout : 2000,
+                    pos     : 'top-right'
+                });
+            }
+            if (status === "complete" && result.info === 'OK') {
+                var geocode = result.geocodes[0];
+                rentMarker = new AMap.Marker({
+                    map: map,
+                    title: house_for[0],
+                    icon: 'http://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+                    position: [geocode.location.getLng(), geocode.location.getLat()]
+                });
+
+                rentMarkerArray.push(rentMarker);
+                /*显示点的信息*/
+                rentMarker.content = "<div>房源：<a target = '_blank' href='" + house_for[3] + "'>" + house_for[1] + 
+                "</a><div><div>价格："+house_for[2]+"</div><div>房间信息:"+house_for[4]+"</div><div>地址:"+house_for[0]+
+                    "</div><div>图片:</div><div><img src="+house_for[5]+"></div>"
+                /*加载点的信息*/
+                rentMarker.on('click', function(e) {
+                    x1 = geocode.location.getLng();
+                    y1 = geocode.location.getLat();
+                    $("#fav").attr('data-favid', house_for[6])
+                    if(x==null|y==null){
+                        box.style.display="none";
+                        /*uikit自带的通知*/
+                        UIkit.notify({
+                            message : '请选择工作地点',
+                            status  : 'warning',
+                            timeout : 2000,
+                            pos     : 'top-right'
+                        });
+                    }
+                    infoWindow.setContent(e.target.content);
+                    infoWindow.open(map, e.target.getPosition());
+                    if (amapTransfer) amapTransfer.clear();
+                    /*加载乘车策略*/
+                    amapTransfer = new AMap.Transfer({
+                        map: map,
+                        policy: AMap.TransferPolicy.LEAST_TIME,
+                        city: {{ city_code|safe }},
+                        panel: 'transfer_panel'
+                    });
+                    //根据起、终点名称查询公交换乘路线（改用坐标点，统一下不然一些会出错）
+                    amapTransfer.search(new AMap.LngLat(x,y), new AMap.LngLat(x1, y1));
+
+                });
+            }
+        })
+    }
+    /*在选择的城市里，加载地址和出行方式，然后定义到达圈，默认60分钟*/
+    function loadWorkLocation() {
+        delWorkLocation();
+        var geocoder = new AMap.Geocoder({
+            city:{{ city_code|safe }},
+            radius: 1000
+        });
+
+        geocoder.getLocation(workAddress, function(status, result) {
+            if (status === "complete" && result.info === 'OK') {
+                var geocode = result.geocodes[0];
+                x = geocode.location.getLng();
+                y = geocode.location.getLat();
+                loadWorkMarker(x, y);
+                loadWorkRange(x, y, 60, "#3f67a5", "SUBWAY,BUS");
+                map.setZoomAndCenter(12, [x, y]);
+            }
+        })
+    }
+
+    
+    /*加载填写的地址*/
+    AMap.event.addListener(auto, "select", workLocationSelected);
+
+
+    /*把填写的地址进行处理后转到对应函数*/
+    function workLocationSelected(e) {
+        workAddress = e.poi.name;
+        loadWorkLocation();
+    }
+    
+    /*根据地址进行描点*/
+    function loadWorkMarker(x, y, locationName) {
+        workMarker = new AMap.Marker({
+            map: map,
+            title: locationName,
+            icon: 'http://webapi.amap.com/theme/v1.3/markers/n/mark_r.png',
+            position: [x, y]
+
+        });
+    }
+
+    /*画出到达圈*/
+    function loadWorkRange(x, y, t, color, v) {
+        arrivalRange.search([x, y], t, function(status, result) {
+            if (result.bounds) {
+                for (var i = 0; i < result.bounds.length; i++) {
+                    var polygon = new AMap.Polygon({
+                        map: map,
+                        fillColor: color,
+                        fillOpacity: "0.4",
+                        strokeColor: color,
+                        strokeOpacity: "0.8",
+                        strokeWeight: 1
+                    });
+                    polygon.setPath(result.bounds[i]);
+                    polygonArray.push(polygon);
+                }
+            }
+        }, {
+            policy: v
+        });
+    }
+
+    /*清除标记点函数*/
+    function delWorkLocation() {
+        if (polygonArray) map.remove(polygonArray);
+        if (workMarker) map.remove(workMarker);
+        polygonArray = [];
+    }
+    
+    /*清除标记点函数*/
+    function delRentLocation() {
+        if (rentMarkerArray) map.remove(rentMarkerArray);
+        rentMarkerArray = [];
+    }
+
+
+    $('#fav').on('click', function(){
+        var _this = $(this),
+            favid = _this.attr('data-favid');
+        $.ajax({
+                cache: false,
+                type: "POST",
+                url: "{% url 'user:add_fav' %}",
+                data: {
+                    fav_type: 1,
+                    fav_id: favid,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                async: false,
+                dataType: "json",
+                success: function(result){
+                    alert(result.msg);
+                },
+                error: function () {
+                    alert('操作失败');
+                }
+            });
+    });
+
+    </script>
+{% endblock %}
+</body>
+
+</html>

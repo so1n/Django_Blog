@@ -1,0 +1,20 @@
+{% extends 'search/base.html' %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-智能搜索小助手</title>
+        {% block js %}
+        <script src="{% static 'uikit/js/components/grid.js' %}"></script>
+        {% endblock js %}
+    </head>
+
+    <body class="uk-height-1-1">
+        <div class="uk-vertical-align">
+            <div class="uk-vertical-align-middle">页面错误</div>
+        </div>
+    </body>
+</html>

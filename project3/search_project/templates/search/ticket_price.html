@@ -1,0 +1,127 @@
+                            <table class="uk-table">
+                            {% if view_display%}
+                            {% if view_list %}
+                                <thead>
+                                    <tr>
+                                        <th>车号</th>
+                                        <th>起始站</th>
+                                        <th>目的站</th>
+                                        <th>开车时间</th>
+                                        <th>抵达时间</th>
+                                        <th>总共时长</th>
+                                        <th>商务座</th>
+                                        <th>一等座</th>
+                                        <th>二等座</th>
+                                        <th>高级软卧</th>
+                                        <th>软卧</th>
+                                        <th>动卧</th>
+                                        <th>硬卧</th>
+                                        <th>软座</th>
+                                        <th>硬座</th>
+                                        <th>无座</th>
+                                    </tr>
+                                </thead>
+                                {% for ticket_info in view_list %}
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <span data-uk-tooltip title="车号:{{ ticket_info.train_num }}">{{ ticket_info.train_num }}</span>
+                                            <a id="{{ ticket_info.train_id}}" onclick="Show_{{ ticket_info.train_num }}_Hidden({{ ticket_info.train_num }})"><i class="uk-icon-bars"></i></a>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="起始站:{{ ticket_info.f_station }} | 起点站:{{ ticket_info.q_station }}">{{ ticket_info.f_station }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="目的站:{{ ticket_info.t_station }} | 终点站:{{ ticket_info.z_station }}">{{ ticket_info.t_station }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="开车时间:{{ ticket_info.from_time }}">{{ ticket_info.from_time }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="抵达时间:{{ ticket_info.to_time }}">{{ ticket_info.to_time }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="总共时长:{{ ticket_info.all_time }}">{{ ticket_info.all_time }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="商务座:{{ ticket_info.swz_num }}">{{ ticket_info.swz_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="一等座:{{ ticket_info.ydz_num }}">{{ ticket_info.ydz_num }}</span>
+                                        </td>
+                                        <td >
+                                            <span data-uk-tooltip title="二等座:{{ ticket_info.edz_num }}">{{ ticket_info.edz_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="高级软卧:{{ ticket_info.gjrw_num }}">{{ ticket_info.gjrw_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="软卧:{{ ticket_info.rw_num }}">{{ ticket_info.rw_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="动卧:{{ ticket_info.dw_num }}">{{ ticket_info.dw_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="硬卧:{{ ticket_info.yw_num }}">{{ ticket_info.yw_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="软座:{{ ticket_info.rz_num }}">{{ ticket_info.rz_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="硬座:{{ ticket_info.yz_num }}">{{ ticket_info.yz_num }}</span>
+                                        </td>
+                                        <td>
+                                            <span data-uk-tooltip title="无座:{{ ticket_info.wz_num }}">{{ ticket_info.wz_num }}</span>
+                                        </td>
+                                    </tr>
+                                    <tr id="{{ ticket_info.train_num }}" style="display: none;">
+                                        <td>票价</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td>票价</td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <div>
+                                    <p>a</p>
+                                    <p>a</p>
+                                    </div>
+                                </tbody>
+                                {% empty %}
+                                {% endfor %}
+                            {% else %}
+                            <div class="uk-alert" data-uk-alert>
+                                <a href="" class="uk-alert-close uk-close"></a>
+                                <p>该日期没有班次了</p>
+                            </div> 
+                            {% endif %}
+                            {% endif %}
+                            </table>
+                            {% if error_msg %}
+                            <div class="uk-alert" data-uk-alert>
+                                <a href="" class="uk-alert-close uk-close"></a>
+                                <p>{{ error_msg }}</p>
+                            </div> 
+                            {% endif %}
+<script>
+            {% for ticket_info in view_list %}
+            function Show_{{ ticket_info.train_num }}_Hidden(tid){
+                if(tid.style.display=="table-row"){
+                    tid.style.display='none';
+                }else{
+                    tid.style.display='table-row';
+                }
+            }
+            {% empty %}
+            {% endfor %}
+</script>

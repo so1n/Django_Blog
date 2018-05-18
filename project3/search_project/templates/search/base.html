@@ -1,0 +1,96 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-智能搜索小助手</title>
+        <link id="data-uikit-theme" rel="stylesheet" href="{% static 'uikit/css/uikit.docs.min.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/docs.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/highlight.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/slider.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/progress.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/slideshow.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/datepicker.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/autocomplete.css' %}">
+        <link rel="stylesheet" href="{% static 'uikit/css/components/tooltip.css' %}">
+        {% block css %}
+        {% endblock css %}
+        <script src="{% static 'uikit/js/jquery.js' %}"></script>
+        <script src="{% static 'uikit/js/uikit.min.js' %}"></script>
+        <script src="{% static 'uikit/js/highlight.js' %}"></script>
+        <script src="{% static 'uikit/js/docs.js' %}"></script>
+        <script src="{% static 'uikit/js/components/slider.js' %}"></script>
+        <script src="{% static 'uikit/js/components/slideshow.js' %}"></script>
+        <script src="{% static 'uikit/js/components/datepicker.js' %}"></script>
+        <script src="{% static 'uikit/js/components/autocomplete.js' %}"></script>
+        <script src="{% static 'uikit/js/components/tooltip.js' %}"></script>
+        {% block js %}
+        {% endblock js %}
+    </head>
+
+    <body>
+        <!-- 顶栏 -->
+        {% block nav %}
+        <nav class="tm-navbar uk-navbar uk-navbar-attached">
+            <ul class="uk-navbar-nav">
+                <li><a href="" data-uk-offcanvas="{target:'#my-id'}"><i class="uk-icon-bars uk-icon-small"></i></a></li>
+            </ul>
+            <div class="uk-navbar-flip">
+                <div class="uk-navbar-content">
+                    <ul class="uk-navbar-nav uk-hidden-small">
+                        {% if user.is_authenticated %}
+                        <li class="uk-active"><a href="{% url 'user:user_info' %}">个人中心</a></li>
+                        <li><a href="{% url 'user:logout' %}">退出</a></li>
+                        {% else %}
+                        <li><a href="{% url 'user:login' %}?next={{ request.path }}">登录</a></li>
+                        <li><a href="{% url 'user:register' %}">注册</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        {% endblock %}
+         <!-- 抽屉式边栏 -->
+        <div id="my-id" class="uk-offcanvas">
+            <div class="uk-offcanvas-bar">
+                <ul class="uk-nav uk-nav-offcanvas uk-nav-parent-icon" data-uk-nav>
+                    <li class="uk-text-large uk-text-bold"><a href="{% url 'user:index' %}"><i class="uk-icon-home uk-icon-small"></i> 首页</a></li>
+                    <li class="uk-nav-divider"></li>
+                    <li class="uk-nav-header uk-text-large">功能</li>
+                    <li {% if request.path == '/' %} class="uk-active"{% endif %}><a href="{% url 'user:index' %}"><i class="uk-icon-paper-plane"></i> Home</a></li>
+                    <li {% if request.path|slice:'6' == '/movie' %}class="uk-active"{% endif %}><a href="{% url 'movie:movie_index' %}"><i class="uk-icon-film"></i> 电影</a></li>
+                    <li {% if request.path|slice:'6' == '/house' %}class="uk-active"{% endif %}><a href="{% url 'house:map' %}"><i class="uk-icon-building"></i> 住房</a></li>
+                    <li {% if request.path|slice:'5' == '/info' %}class="uk-active"{% endif %}><a href="{% url 'information:Info_Index' %}"><i class="uk-icon-book"></i> 资讯</a></li>
+                    <li class="uk-nav-divider"></li>
+                    <li><a href=""><i class="uk-icon-info-circle"></i> 关于</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        {% block main %}
+        {% endblock main %}
+        {% block footer %}
+        <!--空一个白行-->
+        <div class="uk-block" ></div>
+        <!-- 大小由docs.css的tmfooter模块决定 -->
+        <div class="uk-block uk-block-secondary tm-footer uk-position-bottom">
+            <div class="uk-container-center uk-text-center tm-myslider">
+                <ul class="uk-subnav uk-subnav-line uk-flex-center">
+                    <li><a href="http://github.com/uikit/uikit">GitHub</a></li>
+                    <li><a href="http://github.com/uikit/uikit/issues">Issues</a></li>
+                    <li><a href="http://github.com/uikit/uikit/blob/master/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://twitter.com/getuikit">Twitter</a></li>
+                </ul>
+                <div class="uk-panel">
+                    <p>前端 Power by <a href="http://www.getuikit.net/index.html">Uikit.</a> 后端 Power by <a href="https://www.djangoproject.com/">Django</a>.</p>
+                </div>
+
+            </div>
+        </div>
+        {% endblock %}
+        {% block js2 %}
+        {% endblock %}
+    </body>
+</html>

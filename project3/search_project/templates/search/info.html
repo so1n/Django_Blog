@@ -1,0 +1,157 @@
+{% extends 'search/base.html' %}
+{% load staticfiles %}
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{{ title }}-智能搜索小助手</title>
+        {% block js %}
+        <script src="{% static 'uikit/js/components/grid.js' %}"></script>
+        {% endblock js %}
+    </head>
+
+    <body>
+        {% block main %}
+        <div class="uk-panel uk-width-medium-1-2 uk-container-center uk-margin">
+            <a class="uk-button uk-button-danger {% if type == 'hot' %}uk-active{% endif %}" href="{% url 'information:Info_Index' %}?type=hot&tag={{ tag }}">Hot</a>
+            <a class="uk-button uk-button-primary {% if type == 'new' %}uk-active{% endif %}" href="{% url 'information:Info_Index' %}?type=new&tag={{ tag }}">New</a>
+            <div class="uk-position-bottom-right">
+                <a href="#modal" data-uk-modal class="uk-link-muted"><i class="uk-icon-check-square-o uk-icon-medium"></i></a>
+                <a href="#modal1" data-uk-modal class="uk-link-muted"><i class="uk-icon-cog uk-icon-medium"></i></a>
+            </div>
+        </div>
+
+        <div id="modal" class="uk-modal">
+            <div class="uk-modal-dialog">
+                <a href="" class="uk-modal-close uk-close"></a>
+                <h1>要推送的频道</h1>
+                <hr >
+                <div>
+                    <form action="{% url 'user:add_tag' %}" method="POST">
+                        {% for tag_f in tag_list %}
+                        <input type="checkbox" value="{{ tag_f }}" name="check_box_list"/>{{ tag_f }}
+                        {% endfor %}
+                        <input type="submit" value="提交"/>
+                    {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div id="modal1" class="uk-modal">
+            <div class="uk-modal-dialog">
+                <a href="" class="uk-modal-close uk-close"></a>
+                <h1>频道选择</h1>
+                <hr >
+                {% for tag_f in user_tag %}
+                    <p>
+                        {% if tag_f.name %}
+                        <a {% ifequal tag_f.name tag  %}class="uk-icon-hover uk-icon-check-square-o"{% else %}class="uk-icon-square-o"{% endifequal %} href="{% url 'information:Info_Index' %}?tag={{ tag_f.name }}&type={{ type }}">
+                            {{ tag_f.name }}
+                        </a>
+                        {% endif %}
+                    </p>
+                {% endfor %}
+            </div>
+        </div>
+        {% for info in info_list.object_list %}
+        <div class="uk-panel uk-width-medium-1-2 uk-container-center uk-margin-large">
+            <div class="uk-flex">
+                <div class="uk-flex-middle uk-margin-small-top">
+                    {% if not info.fav %}
+                    <a href="" id="fav{{ info.info.id }}" data-favid="{{ info.info.id }}" class="uk-flex"><i class="uk-icon-thumbs-up"></i></a>
+                    {% else %}
+                    <a href="" id="fav{{ info.info.id }}" data-favid="{{ info.info.id }}" class="uk-flex"><i class="uk-icon-thumbs-down"></i></a>
+                    {% endif %}
+                    <span class="uk-flex">{{ info.info.fav_nums|add:info.info.u_fav_nums }}</span>
+                </div>
+                <div class="uk-margin-left uk-clearfix">
+                    <h3 class="uk-panel-title">
+                        <span><a href="{% url 'information:read' info.info.id %}" class="uk-link-muted" style="text-decoration:none">{{ info.info.name }}</a></span>
+                        <span class="uk-text-muted uk-text-small">- {{ info.info.tag }}</span>
+                    </h3>
+                    <span><a href=""><i class="uk-icon-bookmark-o"></i></a></span>
+                    <span class="uk-text-muted">阅读量:{{ info.info.read_nums|add:info.info.u_read_nums }}</span>
+                    <span class="uk-align-right">&nbsp;&nbsp;#{{ info.info.info_from }}</span>
+                    <span class="uk-text-muted uk-align-right">{{ info.info.add_time }}</span>
+                </div>
+                <div class="uk-flex">
+                    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
+            </div>
+                {% if info.info.fav_nums|add:info.info.read_nums > 50 %}
+                <div class="uk-panel-badge uk-badge uk-badge-danger">Hot</div>
+                {% endif %}
+        </div>
+        {% endfor %}
+                <ul class="uk-pagination">
+                {% if info_list.has_previous %}
+                    <li><a href="?{{ info_list.previous_page_number.querystring }}">上一页</a></li>
+                {% endif %}
+
+                {% for page in info_list.pages %}
+                    {% if page %}
+                        {% ifequal page info_list.number %}
+                            <li class="uk-active"><span>{{ page }}</span></li>
+                        {% else %}
+                            <li><a href="?{{ page.querystring }}">{{ page }}</a></li>
+                        {% endifequal %}
+                    {% else %}
+                        <li><span>...</span></li>
+                    {% endif %}
+                {% endfor %}
+                {% if info_list.has_next %}
+                    <li><a href="?{{ info_list.next_page_number.querystring }}">下一页</a>
+                {% endif %}
+                </ul>
+        {% endblock main %}
+        {% block footer %}
+        <div class="uk-block" ></div>
+        <!-- 大小由docs.css的tmfooter模块决定 -->
+        <div class="uk-block uk-block-secondary tm-footer">
+            <div class="uk-container-center uk-text-center">
+                <ul class="uk-subnav uk-subnav-line uk-flex-center">
+                    <li><a href="http://github.com/uikit/uikit">GitHub</a></li>
+                    <li><a href="http://github.com/uikit/uikit/issues">Issues</a></li>
+                    <li><a href="http://github.com/uikit/uikit/blob/master/CHANGELOG.md">Changelog</a></li>
+                    <li><a href="https://twitter.com/getuikit">Twitter</a></li>
+                </ul>
+                <div class="uk-panel">
+                    <p>前端 Power by <a href="http://www.getuikit.net/index.html">Uikit.</a> 后端 Power by <a href="https://www.djangoproject.com/">Django</a>.</p>
+                </div>
+
+            </div>
+        </div>
+        {% endblock %}
+        {% block js2 %}
+        <script>
+        {% for info in info_list.object_list %}
+        $('#fav{{ info.info.id }}').on('click', function(){
+            var _this = $(this),
+                favid = _this.attr('data-favid');
+            $.ajax({
+                    cache: false,
+                    type: "POST",
+                    url: "{% url 'user:add_fav' %}",
+                    data: {
+                        fav_type: 3,
+                        fav_id: favid,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    async: false,
+                    dataType: "json",
+                    success: function(result){
+                        alert(result.msg);
+                    },
+                    error: function () {
+                        alert('操作失败');
+                    }
+                });
+        });
+        {% endfor %}
+        </script>
+        {% endblock %}
+
+    </body>
+</html>
